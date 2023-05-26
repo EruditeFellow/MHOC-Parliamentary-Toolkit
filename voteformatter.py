@@ -145,6 +145,201 @@ def process_text(mode):
         }}
       }}
     }}"""
+    
+    elif mode == "stormont":
+        if not re.search(r'AYE {NI}:(.*?)NO {NI}:', input_text, re.DOTALL) or \
+                not re.search(r'NO {NI}:(.*?)ABSTAIN {NI}:', input_text, re.DOTALL) or \
+                not re.search(r'ABSTAIN {NI}:(.*?)$', input_text, re.DOTALL):
+            error_message = "Invalid input: Stormont mode cannot be used with this input type."
+            output.delete("1.0", "end")
+            output.insert("1.0", error_message)
+            return
+
+        ayes = re.findall(r'AYE {NI}:(.*?)NO {NI}:', input_text, re.DOTALL)[0].strip().split('\n')
+        ayes = [f"'{name.strip()}'" for name in ayes if name.strip() != '']
+
+        noes = re.findall(r'NO {NI}:(.*?)ABSTAIN {NI}:', input_text, re.DOTALL)[0].strip().split('\n')
+        noes = [f"'{name.strip()}'" for name in noes if name.strip() != '']
+
+        abstains = re.findall(r'ABSTAIN {NI}:(.*?)$', input_text, re.DOTALL)[0].strip().split('\n')
+        abstains = [f"'{name.strip()}'" for name in abstains if name.strip() != '']
+    
+        output_text = f"""function addVotes() {{
+      var spreadsheet = SpreadsheetApp.getActiveSpreadsheet();
+      var sheet = spreadsheet.getSheetByName('13th Assembly Voting'); // Enter sheet name
+
+      var ayeVotes = [{','.join(ayes)}].map(name => name.toLowerCase());
+
+      var noVotes = [{','.join(noes)}].map(name => name.toLowerCase());
+
+      var abstainVotes = [{','.join(abstains)}].map(name => name.toLowerCase());
+
+      var range = sheet.getRange('C5:C28'); // Adjusted range from C5 to C28 - this row is for usernames
+      var values = range.getValues();
+      var styles = range.getTextStyles(); // Get the text styles in the range
+
+      var lastVote = 'DNV';
+      var lastName = '';
+
+      for (var i = 0; i < values.length; i++) {{
+        var name = values[i][0].toLowerCase();
+        var voteCell = sheet.getRange('AT' + (i + 5)); // Adjusted to start from AT(5) - Change it depending on the column you want to fill out
+
+        if (name === '') {{
+          name = lastName;
+        }} else {{
+          lastName = name;
+        }}
+
+        if (styles[i][0].isStrikethrough()) {{ // Check if username has a strikethrough
+          voteCell.setValue('N/A');
+        }} else {{
+          if (ayeVotes.includes(name)) {{
+            voteCell.setValue('AYE');
+            lastVote = 'AYE';
+          }} else if (noVotes.includes(name)) {{
+            voteCell.setValue('NO');
+            lastVote = 'NO';
+          }} else if (abstainVotes.includes(name)) {{
+            voteCell.setValue('ABS');
+            lastVote = 'ABS';
+          }} else {{
+            voteCell.setValue('DNV'); 
+            lastVote = 'DNV';
+          }}
+        }}
+      }}
+    }}"""
+
+    elif mode == "holyrood":
+        if not re.search(r'FOR:(.*?)AGAINST:', input_text, re.DOTALL) or \
+                not re.search(r'AGAINST:(.*?)ABSTAIN:', input_text, re.DOTALL) or \
+                not re.search(r'ABSTAIN:(.*?)$', input_text, re.DOTALL):
+            error_message = "Invalid input: Holyrood mode cannot be used with this input type."
+            output.delete("1.0", "end")
+            output.insert("1.0", error_message)
+            return
+
+        fors = re.findall(r'FOR:(.*?)AGAINST:', input_text, re.DOTALL)[0].strip().split('\n')
+        fors = [f"'{name.strip()}'" for name in fors if name.strip() != '']
+
+        againsts = re.findall(r'AGAINST:(.*?)ABSTAIN:', input_text, re.DOTALL)[0].strip().split('\n')
+        againsts = [f"'{name.strip()}'" for name in againsts if name.strip() != '']
+
+        abstains = re.findall(r'ABSTAIN:(.*?)$', input_text, re.DOTALL)[0].strip().split('\n')
+        abstains = [f"'{name.strip()}'" for name in abstains if name.strip() != '']
+    
+        output_text = f"""function addVotes() {{
+      var spreadsheet = SpreadsheetApp.getActiveSpreadsheet();
+      var sheet = spreadsheet.getSheetByName('12th Parliament Voting Record'); // Enter sheet name
+
+      var forVotes = [{','.join(fors)}].map(name => name.toLowerCase());
+
+      var againstVotes = [{','.join(againsts)}].map(name => name.toLowerCase());
+
+      var abstainVotes = [{','.join(abstains)}].map(name => name.toLowerCase());
+
+      var range = sheet.getRange('C4:C38'); // Adjusted range from C4 to C38 - this row is for usernames
+      var values = range.getValues();
+      var styles = range.getTextStyles(); // Get the text styles in the range
+
+      var lastVote = 'DNV';
+      var lastName = '';
+
+      for (var i = 0; i < values.length; i++) {{
+        var name = values[i][0].toLowerCase();
+        var voteCell = sheet.getRange('BD' + (i + 4)); // Adjusted to start from BD(4) - Change it depending on the column you want to fill out
+
+        if (name === '') {{
+          name = lastName;
+        }} else {{
+          lastName = name;
+        }}
+
+        if (styles[i][0].isStrikethrough()) {{ // Check if username has a strikethrough
+          voteCell.setValue('N/A');
+        }} else {{
+          if (forVotes.includes(name)) {{
+            voteCell.setValue('For');
+            lastVote = 'For';
+          }} else if (againstVotes.includes(name)) {{
+            voteCell.setValue('Against');
+            lastVote = 'Against';
+          }} else if (abstainVotes.includes(name)) {{
+            voteCell.setValue('Abstain');
+            lastVote = 'Abstain';
+          }} else {{
+            voteCell.setValue('DNV'); 
+            lastVote = 'DNV';
+          }}
+        }}
+      }}
+    }}"""
+        
+    elif mode == "senedd":
+        if not re.search(r'FOR {CYM}:(.*?)AGAINST {CYM}:', input_text, re.DOTALL) or \
+                not re.search(r'AGAINST {CYM}:(.*?)ABSTAIN {CYM}:', input_text, re.DOTALL) or \
+                not re.search(r'ABSTAIN {CYM}:(.*?)$', input_text, re.DOTALL):
+            error_message = "Invalid input: Senedd mode cannot be used with this input type."
+            output.delete("1.0", "end")
+            output.insert("1.0", error_message)
+            return
+
+        fors = re.findall(r'FOR {CYM}:(.*?)AGAINST {CYM}:', input_text, re.DOTALL)[0].strip().split('\n')
+        fors = [f"'{name.strip()}'" for name in fors if name.strip() != '']
+
+        againsts = re.findall(r'AGAINST {CYM}:(.*?)ABSTAIN {CYM}:', input_text, re.DOTALL)[0].strip().split('\n')
+        againsts = [f"'{name.strip()}'" for name in againsts if name.strip() != '']
+
+        abstains = re.findall(r'ABSTAIN {CYM}:(.*?)$', input_text, re.DOTALL)[0].strip().split('\n')
+        abstains = [f"'{name.strip()}'" for name in abstains if name.strip() != '']
+    
+        output_text = f"""function addVotes() {{
+      var spreadsheet = SpreadsheetApp.getActiveSpreadsheet();
+      var sheet = spreadsheet.getSheetByName('Voting Record of the 9th Senedd'); // Enter sheet name
+
+      var forVotes = [{','.join(fors)}].map(name => name.toLowerCase());
+
+      var againstVotes = [{','.join(againsts)}].map(name => name.toLowerCase());
+
+      var abstainVotes = [{','.join(abstains)}].map(name => name.toLowerCase());
+
+      var range = sheet.getRange('D4:D30'); // Adjusted range from D4 to D30 - this row is for usernames
+      var values = range.getValues();
+      var styles = range.getTextStyles(); // Get the text styles in the range
+
+      var lastVote = 'DNV';
+      var lastName = '';
+
+      for (var i = 0; i < values.length; i++) {{
+        var name = values[i][0].toLowerCase();
+        var voteCell = sheet.getRange('AX' + (i + 4)); // Adjusted to start from AX(4) - Change it depending on the column you want to fill out
+
+        if (name === '') {{
+          name = lastName;
+        }} else {{
+          lastName = name;
+        }}
+
+        if (styles[i][0].isStrikethrough()) {{ // Check if username has a strikethrough
+          voteCell.setValue('N/A');
+        }} else {{
+          if (forVotes.includes(name)) {{
+            voteCell.setValue('For');
+            lastVote = 'For';
+          }} else if (againstVotes.includes(name)) {{
+            voteCell.setValue('Against');
+            lastVote = 'Against';
+          }} else if (abstainVotes.includes(name)) {{
+            voteCell.setValue('Abstain');
+            lastVote = 'Abstain';
+          }} else {{
+            voteCell.setValue('DNV'); 
+            lastVote = 'DNV';
+          }}
+        }}
+      }}
+    }}"""
     else:
         error_message = "Invalid mode"
         output.delete("1.0", "end")
@@ -192,8 +387,26 @@ output.grid(row=5, column=0, columnspan=2, padx=20, pady=0)
 appearance_mode_button = customtkinter.CTkSegmentedButton(app, font=("Cenzo Flare Cond Light", 21), values=["light", "dark"], command=lambda v: customtkinter.set_appearance_mode(v))
 appearance_mode_button.grid(row=8, column=0, columnspan=4, padx=20, pady=20)
 
-switch_button = customtkinter.CTkSegmentedButton(app, font=("Cenzo Flare Cond Light", 21), values=["mhol", "mhoc"], command=lambda value: process_text(value))
-switch_button.grid(row=4, column=0, columnspan=4, padx=20, pady=20)
+frame = customtkinter.CTkFrame(app, fg_color="transparent")
+frame.grid(row=4, column=0, columnspan=2, padx=0, pady=0)
+
+switch_button = customtkinter.CTkButton(frame, font=("Cenzo Flare Cond Light", 21), fg_color="#BC5154", hover_color="#9B4043", width=10, text="mhol", command=lambda: process_text("mhol"))
+switch_button.grid(row=0, column=0, padx=2.5, pady=20)
+
+switch_button = customtkinter.CTkButton(frame, font=("Cenzo Flare Cond Light", 21), fg_color="#748B74", hover_color="#5D6E5D", width=10, text="mhoc", command=lambda: process_text("mhoc"))
+switch_button.grid(row=0, column=1, padx=2.5, pady=20)
+
+switch_button = customtkinter.CTkButton(frame, font=("Cenzo Flare Cond Light", 21), fg_color="#5485C0", hover_color="#436A99", width=10, text="stormont", command=lambda: process_text("stormont"))
+switch_button.grid(row=0, column=2, padx=2.5, pady=20)
+
+switch_button = customtkinter.CTkButton(frame, font=("Cenzo Flare Cond Light", 21), fg_color="#481E6F", hover_color="#32154D", width=10, text="holyrood", command=lambda: process_text("holyrood"))
+switch_button.grid(row=0, column=3, padx=2.5, pady=20)
+
+switch_button = customtkinter.CTkButton(frame, font=("Cenzo Flare Cond Light", 21), fg_color="#820045", hover_color="#5B0030", width=10, text="senedd", command=lambda: process_text("senedd"))
+switch_button.grid(row=0, column=4, padx=2.5, pady=20)
+
+frame.grid_columnconfigure(0, weight=1)
+frame.grid_columnconfigure(1, weight=1)
 
 screen_width = app.winfo_screenwidth()
 screen_height = app.winfo_screenheight()
